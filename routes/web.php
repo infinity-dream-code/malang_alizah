@@ -28,3 +28,6 @@ Route::get('/list-perizinan', function () {
 Route::get('/dashboard/list-perizinan', function () {
     return view('list-perizinan');
 });
+
+Route::post('/api/login', [\App\Http\Controllers\ApiController::class, 'login']);
+Route::post('/api/list-perizinan', [\App\Http\Controllers\ApiController::class, 'listPerizinan']);
