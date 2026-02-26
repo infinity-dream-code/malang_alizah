@@ -29,11 +29,15 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $this->routes(function () {
+            $path = parse_url(config('app.url'), PHP_URL_PATH);
+            $prefix = ($path && $path !== '/') ? trim($path, '/') : '';
+
             Route::middleware('api')
-                ->prefix('api')
+                ->prefix($prefix ? $prefix . '/api' : 'api')
                 ->group(base_path('routes/api.php'));
 
             Route::middleware('web')
+                ->prefix($prefix)
                 ->group(base_path('routes/web.php'));
         });
     }
