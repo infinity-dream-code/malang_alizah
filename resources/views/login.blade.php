@@ -13,64 +13,70 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f5f5f4;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background: #1a1a1a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 15px;
-            color: #1c1917;
+            color: #333;
+        }
+        .login-wrap {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
         }
         .login-box {
-            width: 100%;
-            max-width: 360px;
-            padding: 32px;
             background: #fff;
-            border: 1px solid #e7e5e4;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
-        h1 {
-            margin: 0 0 28px;
-            font-size: 18px;
+        .login-box h1 {
+            margin: 0 0 32px;
+            font-size: 22px;
             font-weight: 600;
-            letter-spacing: -0.02em;
+            color: #1a1a1a;
         }
         label {
             display: block;
-            margin-bottom: 6px;
-            font-size: 13px;
-            color: #57534e;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
         }
         input {
             width: 100%;
-            padding: 10px 12px;
-            margin-bottom: 18px;
-            border: 1px solid #d6d3d1;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
             font-size: 15px;
             font-family: inherit;
+            background: #fafafa;
         }
         input:focus {
             outline: none;
-            border-color: #78716c;
+            border-color: #1a1a1a;
+            background: #fff;
         }
         .error {
-            margin-bottom: 18px;
-            padding: 10px;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            font-size: 13px;
-            color: #991b1b;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #fff5f5;
+            border-left: 3px solid #e53e3e;
+            font-size: 14px;
+            color: #c53030;
             display: none;
         }
         .error.show { display: block; }
         button {
             width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            background: #1c1917;
+            padding: 14px;
+            margin-top: 8px;
+            background: #1a1a1a;
             color: #fff;
             border: none;
-            font-size: 14px;
+            font-size: 15px;
+            font-weight: 500;
             font-family: inherit;
             cursor: pointer;
         }
-        button:hover { background: #292524; }
+        button:hover { background: #333; }
         button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -78,24 +84,27 @@
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h1>Login</h1>
-        <div class="error" id="error"></div>
-        <form id="loginForm">
-            @csrf
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required autofocus>
+    <div class="login-wrap">
+        <div class="login-box">
+            <h1>Login</h1>
+            <div class="error" id="error"></div>
+            <form id="loginForm">
+                @csrf
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autofocus placeholder="Masukkan username">
 
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Masukkan password">
 
-            <button type="submit" id="btnSubmit">Masuk</button>
-        </form>
+                <button type="submit" id="btnSubmit">Masuk</button>
+            </form>
+        </div>
     </div>
     <script>
         const form = document.getElementById('loginForm');
         const errorEl = document.getElementById('error');
         const btnSubmit = document.getElementById('btnSubmit');
+        const baseUrl = "{{ url('/') }}";
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -103,7 +112,7 @@
             errorEl.textContent = '';
             btnSubmit.disabled = true;
 
-            const res = await fetch('/api/login', {
+            const res = await fetch(baseUrl + '/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -121,7 +130,7 @@
             if (data.status === 200 && data.data && data.data.unit != null) {
                 sessionStorage.setItem('unit', data.data.unit);
                 sessionStorage.setItem('user', JSON.stringify(data.data));
-                window.location.href = '/list-perizinan';
+                window.location.href = baseUrl + '/list-perizinan';
                 return;
             }
 
