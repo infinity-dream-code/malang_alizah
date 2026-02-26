@@ -10,3 +10,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/login', [ApiController::class, 'login']);
 Route::post('/list-perizinan', [ApiController::class, 'listPerizinan']);
+Route::post('/approve-perizinan', [ApiController::class, 'approvePerizinan']);
+Route::post('/rekap-perizinan', [ApiController::class, 'rekapPerizinan']);

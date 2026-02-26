@@ -28,3 +28,7 @@ Route::get('/list-perizinan', function () {
 Route::get('/dashboard/list-perizinan', function () {
     return view('list-perizinan');
 });
+
+Route::get('/dashboard/rekap', function () {
+    return view('rekap');
+});

@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -14,7 +15,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 15px;
             color: #333;
@@ -26,9 +27,9 @@
         }
         .login-box {
             background: #fff;
-            padding: 48px 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            border-radius: 12px;
+            padding: 40px 36px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            border-radius: 16px;
         }
         .login-box h1 {
             margin: 0 0 8px;
@@ -51,24 +52,25 @@
         input {
             width: 100%;
             padding: 12px 16px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             font-size: 15px;
             font-family: inherit;
-            background: #f9fafb;
-            transition: border-color 0.2s, background 0.2s;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
         input:focus {
             outline: none;
             border-color: #2d5a87;
-            background: #fff;
+            box-shadow: 0 0 0 3px rgba(45,90,135,0.15);
         }
+        .turnstile-wrap { margin: 16px 0; min-height: 65px; }
         button {
             width: 100%;
             padding: 14px;
-            margin-top: 8px;
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            margin-top: 16px;
+            background: #1e3a5f;
             color: #fff;
             border: none;
             border-radius: 8px;
@@ -77,7 +79,7 @@
             font-family: inherit;
             cursor: pointer;
         }
-        button:hover { opacity: 0.95; }
+        button:hover { background: #2d5a87; }
         button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -97,6 +99,10 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required placeholder="Masukkan password">
 
+                <div class="turnstile-wrap">
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.sitekey') }}"></div>
+                </div>
+
                 <button type="submit" id="btnSubmit">Masuk</button>
             </form>
         </div>
@@ -111,6 +117,23 @@
             e.preventDefault();
             btnSubmit.disabled = true;
 
+            const turnstileResp = document.querySelector('[name="cf-turnstile-response"]')?.value;
+            if (!turnstileResp) {
+                btnSubmit.disabled = false;
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Selesaikan verifikasi terlebih dahulu.' });
+                return;
+            }
+            if (!document.getElementById('username').value.trim()) {
+                btnSubmit.disabled = false;
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Username wajib diisi.' });
+                return;
+            }
+            if (!document.getElementById('password').value) {
+                btnSubmit.disabled = false;
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Password wajib diisi.' });
+                return;
+            }
+
             try {
                 const res = await fetch(apiUrl, {
                     method: 'POST',
@@ -120,8 +143,9 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
-                        username: document.getElementById('username').value,
-                        password: document.getElementById('password').value
+                        username: document.getElementById('username').value.trim(),
+                        password: document.getElementById('password').value,
+                        cf_turnstile_response: document.querySelector('[name="cf-turnstile-response"]')?.value || ''
                     })
                 });
 
@@ -136,6 +160,9 @@
                 if (data.status == 200 && (unit !== undefined && unit !== null)) {
                     sessionStorage.setItem('unit', unit);
                     sessionStorage.setItem('user', JSON.stringify(data.data || {}));
+                    if (data.token) {
+                        sessionStorage.setItem('token', data.token);
+                    }
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil',
@@ -146,14 +173,20 @@
                         window.location.href = redirectUrl;
                     });
                 } else {
+                    if (typeof turnstile !== 'undefined') turnstile.reset();
                     btnSubmit.disabled = false;
+                    let errMsg = data.message || 'Login gagal';
+                    if (data.status == 200 && (unit === undefined || unit === null)) {
+                        errMsg = 'Data login tidak lengkap. Unit tidak ditemukan dalam respons.';
+                    }
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal',
-                        text: data.message || 'Login gagal'
+                        text: errMsg
                     });
                 }
             } catch (err) {
+                if (typeof turnstile !== 'undefined') turnstile.reset();
                 btnSubmit.disabled = false;
                 const msg = err.message || 'Terjadi kesalahan koneksi';
                 Swal.fire({
