@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -13,70 +14,70 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 15px;
             color: #333;
         }
         .login-wrap {
             width: 100%;
-            max-width: 400px;
-            padding: 40px;
+            max-width: 420px;
+            padding: 24px;
         }
         .login-box {
             background: #fff;
-            padding: 40px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 48px 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-radius: 12px;
         }
         .login-box h1 {
-            margin: 0 0 32px;
-            font-size: 22px;
+            margin: 0 0 8px;
+            font-size: 24px;
             font-weight: 600;
             color: #1a1a1a;
+        }
+        .login-box .subtitle {
+            margin: 0 0 32px;
+            font-size: 14px;
+            color: #6b7280;
         }
         label {
             display: block;
             margin-bottom: 8px;
             font-size: 14px;
-            color: #555;
+            font-weight: 500;
+            color: #374151;
         }
         input {
             width: 100%;
-            padding: 12px 14px;
+            padding: 12px 16px;
             margin-bottom: 20px;
-            border: 1px solid #ddd;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
             font-size: 15px;
             font-family: inherit;
-            background: #fafafa;
+            background: #f9fafb;
+            transition: border-color 0.2s, background 0.2s;
         }
         input:focus {
             outline: none;
-            border-color: #1a1a1a;
+            border-color: #2d5a87;
             background: #fff;
         }
-        .error {
-            margin-bottom: 20px;
-            padding: 12px;
-            background: #fff5f5;
-            border-left: 3px solid #e53e3e;
-            font-size: 14px;
-            color: #c53030;
-            display: none;
-        }
-        .error.show { display: block; }
         button {
             width: 100%;
             padding: 14px;
             margin-top: 8px;
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
             color: #fff;
             border: none;
+            border-radius: 8px;
             font-size: 15px;
             font-weight: 500;
             font-family: inherit;
             cursor: pointer;
         }
-        button:hover { background: #333; }
+        button:hover { opacity: 0.95; }
         button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -87,7 +88,7 @@
     <div class="login-wrap">
         <div class="login-box">
             <h1>Login</h1>
-            <div class="error" id="error"></div>
+            <p class="subtitle">Masuk ke akun Anda</p>
             <form id="loginForm">
                 @csrf
                 <label for="username">Username</label>
@@ -102,41 +103,59 @@
     </div>
     <script>
         const form = document.getElementById('loginForm');
-        const errorEl = document.getElementById('error');
         const btnSubmit = document.getElementById('btnSubmit');
-        const baseUrl = "{{ url('/') }}";
+        const apiUrl = "{{ url('/api/login') }}";
+        const redirectUrl = "{{ url('/dashboard/list-perizinan') }}";
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            errorEl.classList.remove('show');
-            errorEl.textContent = '';
             btnSubmit.disabled = true;
 
-            const res = await fetch(baseUrl + '/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    username: document.getElementById('username').value,
-                    password: document.getElementById('password').value
-                })
-            });
+            try {
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
+                    })
+                });
 
-            const data = await res.json();
+                const data = await res.json();
+                const unit = data.data?.unit ?? data.unit;
 
-            if (data.status === 200 && data.data && data.data.unit != null) {
-                sessionStorage.setItem('unit', data.data.unit);
-                sessionStorage.setItem('user', JSON.stringify(data.data));
-                window.location.href = baseUrl + '/list-perizinan';
-                return;
+                if (data.status == 200 && (unit !== undefined && unit !== null)) {
+                    sessionStorage.setItem('unit', unit);
+                    sessionStorage.setItem('user', JSON.stringify(data.data || {}));
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: data.message || 'Login berhasil',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = redirectUrl;
+                    });
+                } else {
+                    btnSubmit.disabled = false;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: data.message || 'Login gagal'
+                    });
+                }
+            } catch (err) {
+                btnSubmit.disabled = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan koneksi'
+                });
             }
-
-            errorEl.textContent = data.message || 'Login gagal';
-            errorEl.classList.add('show');
-            btnSubmit.disabled = false;
         });
     </script>
 </body>

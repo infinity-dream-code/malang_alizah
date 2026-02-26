@@ -24,3 +24,7 @@ Route::get('/login', function () {
 Route::get('/list-perizinan', function () {
     return view('list-perizinan');
 });
+
+Route::get('/dashboard/list-perizinan', function () {
+    return view('list-perizinan');
+});

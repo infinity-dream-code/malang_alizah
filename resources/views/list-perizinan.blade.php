@@ -88,7 +88,7 @@
 <body>
     <div class="header">
         <h1>List Perizinan</h1>
-        <a href="/login" class="logout" onclick="sessionStorage.clear();">Keluar</a>
+        <a href="{{ url('/login') }}" class="logout" onclick="sessionStorage.clear();">Keluar</a>
     </div>
     <div class="container">
         <div class="loading" id="loading">Memuat data...</div>
@@ -97,8 +97,10 @@
     </div>
     <script>
         const unit = sessionStorage.getItem('unit');
+        const loginUrl = "{{ url('/login') }}";
+        const apiUrl = "{{ url('/api/list-perizinan') }}";
         if (!unit) {
-            window.location.href = '/login';
+            window.location.href = loginUrl;
         } else {
             loadPerizinan();
         }
@@ -109,7 +111,7 @@
             const content = document.getElementById('content');
 
             try {
-                const res = await fetch('/api/list-perizinan', {
+                const res = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
