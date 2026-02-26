@@ -16,15 +16,22 @@ class ApiController extends Controller
             'password' => 'required',
         ]);
 
-        $response = Http::timeout(15)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post($this->apiUrl, [
-                'method' => 'login',
-                'username' => $request->username,
-                'password' => $request->password,
-            ]);
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post($this->apiUrl, [
+                    'method' => 'login',
+                    'username' => $request->username,
+                    'password' => $request->password,
+                ]);
 
-        return response()->json($response->json(), $response->status());
+            return response()->json($response->json() ?: [], $response->status());
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Server tidak dapat terhubung ke API. Pastikan server memiliki akses ke ' . parse_url($this->apiUrl, PHP_URL_HOST)
+            ], 500);
+        }
     }
 
     public function listPerizinan(Request $request)
@@ -33,13 +40,20 @@ class ApiController extends Controller
             'unit' => 'required',
         ]);
 
-        $response = Http::timeout(15)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post($this->apiUrl, [
-            'method' => 'ListPerizinan',
-            'unit' => $request->unit,
-        ]);
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post($this->apiUrl, [
+                    'method' => 'ListPerizinan',
+                    'unit' => $request->unit,
+                ]);
 
-        return response()->json($response->json(), $response->status());
+            return response()->json($response->json() ?: [], $response->status());
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Server tidak dapat terhubung ke API'
+            ], 500);
+        }
     }
 }

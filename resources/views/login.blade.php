@@ -125,7 +125,12 @@
                     })
                 });
 
-                const data = await res.json();
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                    throw new Error('Response tidak valid. Cek apakah route /api/login dapat diakses.');
+                }
                 const unit = data.data?.unit ?? data.unit;
 
                 if (data.status == 200 && (unit !== undefined && unit !== null)) {
@@ -150,10 +155,11 @@
                 }
             } catch (err) {
                 btnSubmit.disabled = false;
+                const msg = err.message || 'Terjadi kesalahan koneksi';
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Terjadi kesalahan koneksi'
+                    text: msg
                 });
             }
         });
