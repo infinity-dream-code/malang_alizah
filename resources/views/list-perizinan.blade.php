@@ -32,7 +32,11 @@
             font-weight: 600;
             font-size: 16px;
             border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+        .sidebar-brand img { height: 32px; }
         .sidebar-nav {
             padding: 16px 0;
         }
@@ -237,7 +241,10 @@
     <button class="sidebar-toggle" id="sidebarToggle" type="button">☰</button>
     <div class="layout">
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-brand">Malang Alizzah</div>
+            <div class="sidebar-brand">
+                <img src="{{ asset('logo.png') }}" alt="Logo" onerror="this.style.display='none'">
+                <span>Malang Alizah</span>
+            </div>
             <nav class="sidebar-nav">
                 <a href="{{ url('/dashboard/list-perizinan') }}" class="active">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -246,6 +253,10 @@
                 <a href="{{ url('/dashboard/rekap') }}">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                     Rekap
+                </a>
+                <a href="{{ url('/dashboard/users') }}" id="userMenuLink" style="display:none">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    User
                 </a>
             </nav>
         </aside>
@@ -300,6 +311,11 @@
         if (!unit || !token) {
             window.location.href = loginUrl;
         } else {
+            const role = (user.role || user.Role || '').toLowerCase();
+            if (role === 'superadmin') {
+                const link = document.getElementById('userMenuLink');
+                if (link) link.style.display = 'flex';
+            }
             loadPerizinan();
         }
 

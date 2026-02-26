@@ -89,6 +89,7 @@
 <body>
     <div class="login-wrap">
         <div class="login-box">
+            <div style="text-align:center;margin-bottom:20px"><img src="{{ asset('logo.png') }}" alt="Logo" style="height:64px" onerror="this.style.display='none'"></div>
             <h1>Login</h1>
             <p class="subtitle">Masuk ke akun Anda</p>
             <form id="loginForm">

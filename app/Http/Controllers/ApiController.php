@@ -162,4 +162,70 @@ class ApiController extends Controller
             ], 500);
         }
     }
+
+    private function proxyWithToken(Request $request, string $method, array $extra = []): \Illuminate\Http\JsonResponse
+    {
+        $request->validate(['token' => 'required']);
+        $payload = array_merge(['token' => $request->token, 'method' => $method], $extra);
+        $response = Http::timeout(15)->withHeaders(['Content-Type' => 'application/json'])->post($this->apiUrl, $payload);
+        return response()->json($response->json() ?: [], $response->status());
+    }
+
+    public function usersList(Request $request)
+    {
+        $request->validate(['token' => 'required']);
+        $payload = [
+            'token' => $request->token,
+            'method' => 'usersList',
+            'q' => trim((string) ($request->q ?? '')),
+            'page' => max(1, (int) ($request->page ?? 1)),
+        ];
+        $response = Http::timeout(15)->withHeaders(['Content-Type' => 'application/json'])->post($this->apiUrl, $payload);
+        return response()->json($response->json() ?: [], $response->status());
+    }
+
+    public function userDetail(Request $request)
+    {
+        $request->validate(['token' => 'required', 'id' => 'required|integer']);
+        return $this->proxyWithToken($request, 'userDetail', ['id' => (int) $request->id]);
+    }
+
+    public function userCreate(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'username' => 'required',
+            'password' => 'required',
+            'nama' => 'required',
+        ]);
+        $payload = [
+            'token' => $request->token,
+            'method' => 'userCreate',
+            'username' => $request->username,
+            'password' => $request->password,
+            'nama' => $request->nama,
+            'unit' => trim((string) ($request->unit ?? '')),
+            'Apprver' => $request->has('Apprver') ? $request->Apprver : null,
+            'role' => trim((string) ($request->role ?? '')),
+        ];
+        $response = Http::timeout(15)->withHeaders(['Content-Type' => 'application/json'])->post($this->apiUrl, $payload);
+        return response()->json($response->json() ?: [], $response->status());
+    }
+
+    public function userUpdate(Request $request)
+    {
+        $request->validate(['token' => 'required', 'id' => 'required|integer']);
+        $payload = ['token' => $request->token, 'method' => 'userUpdate', 'id' => (int) $request->id];
+        foreach (['username', 'nama', 'unit', 'Apprver', 'role', 'password'] as $k) {
+            if ($request->has($k)) $payload[$k] = $request->input($k);
+        }
+        $response = Http::timeout(15)->withHeaders(['Content-Type' => 'application/json'])->post($this->apiUrl, $payload);
+        return response()->json($response->json() ?: [], $response->status());
+    }
+
+    public function userDelete(Request $request)
+    {
+        $request->validate(['token' => 'required', 'id' => 'required|integer']);
+        return $this->proxyWithToken($request, 'userDelete', ['id' => (int) $request->id]);
+    }
 }

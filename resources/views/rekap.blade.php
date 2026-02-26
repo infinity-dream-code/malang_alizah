@@ -12,7 +12,8 @@
         body { margin: 0; min-height: 100vh; background: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; color: #334155; }
         .layout { display: flex; min-height: 100vh; }
         .sidebar { width: 240px; min-width: 240px; background: #1e293b; color: #e2e8f0; transition: transform 0.2s; }
-        .sidebar-brand { padding: 20px; font-weight: 600; font-size: 16px; border-bottom: 1px solid #334155; }
+        .sidebar-brand { padding: 20px; font-weight: 600; font-size: 16px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+        .sidebar-brand img { height: 32px; }
         .sidebar-nav { padding: 16px 0; }
         .sidebar-nav a { display: flex; align-items: center; padding: 10px 20px; color: #94a3b8; text-decoration: none; }
         .sidebar-nav a:hover { background: #334155; color: #fff; }
@@ -71,7 +72,10 @@
     <button class="sidebar-toggle" id="sidebarToggle" type="button">☰</button>
     <div class="layout">
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-brand">Malang Alizzah</div>
+            <div class="sidebar-brand">
+                <img src="{{ asset('logo.png') }}" alt="Logo" onerror="this.style.display='none'">
+                <span>Malang Alizah</span>
+            </div>
             <nav class="sidebar-nav">
                 <a href="{{ url('/dashboard/list-perizinan') }}">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -80,6 +84,10 @@
                 <a href="{{ url('/dashboard/rekap') }}" class="active">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                     Rekap
+                </a>
+                <a href="{{ url('/dashboard/users') }}" id="userMenuLink" style="display:none">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    User
                 </a>
             </nav>
         </aside>
@@ -137,11 +145,18 @@
 
         const unit = sessionStorage.getItem('unit');
         const token = sessionStorage.getItem('token');
+        const userStr = sessionStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : {};
+        const role = (user.role || user.Role || '').toLowerCase();
         const loginUrl = "{{ url('/login') }}";
         const apiUrl = "{{ url('/api/rekap-perizinan') }}";
         if (!unit || !token) {
             window.location.href = loginUrl;
         } else {
+            if (role === 'superadmin') {
+                const link = document.getElementById('userMenuLink');
+                if (link) link.style.display = 'flex';
+            }
             loadRekap(1);
         }
 
